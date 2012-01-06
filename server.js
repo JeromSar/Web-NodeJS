@@ -5,15 +5,15 @@ var path = require('path');
 var url = require('url');
 
 name = "WebNodeJS";
-version = "1.9";
+version = "1.9.1";
 logging = true;
 timestamp = true;
 running = 0;
 
 function startUp(){
   show(name + " version " + version);
-  show("Trademark (tm) Jerom van der Sar");
-  show("Licened under Creative Commons and MIT licenses");
+  show("Copyright (c) 2011, Jerom van der Sar");
+  show("Licened under the GNU GPL v3 licence");
   show("Starting up...");
   setTimeout(function(){readConfig()},500);
   setTimeout(function(){readDisallow()},1000);

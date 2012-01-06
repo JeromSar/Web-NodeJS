@@ -10,7 +10,6 @@ Contents:
 - start.bat
 - server.js
 - COPYING.txt
-- web (directory)
 
 This is Web-NodeJS, a project wich I've been working on for the last couple of
 days. It's a NodeJS script. NodeJS, a work by Ryan Dahl is based on google's V8 
