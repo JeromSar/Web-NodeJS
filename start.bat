@@ -8,7 +8,7 @@ if not exist "web" md "web"
 cls
 node server.js
 set "newtime=%time:~0,8%"
-set "endline=[%newtime%][INFO] -- Shutting down..."
+set "endline=[%newtime%][INFO] -- Console: Shutting down..."
 echo %endline% >> log.txt
 pause
 exit

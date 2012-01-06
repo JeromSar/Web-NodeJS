@@ -4,8 +4,8 @@ var util = require('util');
 var path = require('path');
 var url = require('url');
 
-name = "WebNodeJS";
-version = "1.9.1";
+name = "Web-NodeJS";
+version = "1.9.2";
 logging = true;
 timestamp = true;
 running = 0;
