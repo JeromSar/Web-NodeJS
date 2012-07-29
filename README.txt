@@ -6,11 +6,11 @@
 ################################################################################
 
 Contents:
-- Readme.txt
+- README.txt
+- COPYING.txt
 - start.bat
 - server.js
 - rcon.js
-- COPYING.txt
 
 This is Web-NodeJS, a project wich I've been working on for the last couple of
 days. It's a NodeJS script. NodeJS, a work by Ryan Dahl is based on Google's V8 

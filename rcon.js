@@ -80,7 +80,7 @@ function closeSocket(socket) {
 function receiveData(data) {
   data = data.toString().replace(/(\r\n|\n|\r)/gm, "");
   if(data.indexOf("/") === 0){
-    module.exports.emit("command", data, socket); return;
+    module.exports.emit("command", data); return;
   } else {
     if(data != "" && data != " ") {  module.exports.emit("message", data); return; }
   }

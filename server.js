@@ -109,7 +109,7 @@ function readConfig(){
           debug = Boolean(part[1].match(/^true$/i));
           if(debug) show("Debugging set to: " + debug);
         }
-	    if(part[0] == "port"){
+	    if(part[0] == "port") {
           port = part[1];
           if(debug) show("Port set to: " + port);
         }
@@ -125,7 +125,7 @@ function readConfig(){
           webpath = part[1];
           if(debug) show("Web directory set to: " + webpath);
         }
-        if(part[0] == "rcon"){
+        if(part[0] == "rcon") {
 		  if(!rconDisabled){
             rcon = Boolean(part[1].match(/^true$/i));
             if(debug) show("Remote Console set to: " + rcon);
@@ -183,7 +183,8 @@ function readDisallow(){
 function startServer() {
   httpServer = http.createServer(httpRequest);
   if(rcon){
-    show("Attempting to start Remote Console...");
+    addRconListeners();
+	show("Attempting to start Remote Console...");
     rconServer.start(rconUser, rconPass, 23);
 	show("Remote Console server listening on port 23");
   }
@@ -195,22 +196,6 @@ function startServer() {
   // the server has been started; excute function
   configLoaded = true;
   afterServerStart();
-}
-
-// remote console listeners
-if(rcon){
-  rconServer.on("connection", function(){ show("Rcon connection received!") });
-  rconServer.on("message", function(message){ show("Rcon: " + message) });
-  rconServer.on("command", function(command){
-    if(command == "/restart"){ stop("Rcon: Restarting...", 2); }
-    if(command == "/restart 10"){ stop("Rcon: Restarting...", 3); }
-    if(command == "/shutdown"){ stop("Rcon: Shutting down...", 0); }
-    if(command == "/reload"){ show("Rcon: Reloading all configs..."); readConfig(); }
-	if(command == "/status"){
-	  rconServer.sendMessage(socket, "Server status: Good");
-	  rconServer.sendMessage(socket, "Server has been running for: " + runningFor + " seconds");
-	}
-  });
 }
 
 // listen for Exception
@@ -364,8 +349,22 @@ function afterServerStart() {
   showEntries = undefined;
 }
 
-function stop(message, errorlevel, errortype){
-  
+function addRconListeners() {
+  rconServer.on("connection", function(){ show("Rcon connection received!") });
+  rconServer.on("message", function(message){ show("[Rcon] " + message) });
+  rconServer.on("command", function(command){
+    if(command == "/restart"){ stop("Rcon: Restarting...", 2); }
+    if(command == "/restart 10"){ stop("Rcon: Restarting...", 3); }
+    if(command == "/shutdown"){ stop("Rcon: Shutting down...", 0); }
+    if(command == "/reload"){ show("Rcon: Reloading all configs..."); readConfig(); }
+	if(command == "/status"){
+	  rconServer.broadcastMessage("Server status: Good");
+	  rconServer.broadcastMessage("Server has been running for: " + runningFor + " seconds");
+	}
+  });
+}
+
+function stop(message, errorlevel, errortype) {
   // fallbacks
   if(!message) { var message = "Console: Shutting down..."; }
   if(!errorlevel) { var errorlevel = 0; }
@@ -373,7 +372,8 @@ function stop(message, errorlevel, errortype){
   
   show(message, errortype);
   if(rcon) { rconServer.disconnectAll("Disconnected."); }
-  setTimeout(function(){ process.exit(errorlevel); },500);
+  
+  setTimeout(function(){ process.exit(errorlevel); },750);
 }
 
 function split(content, delimiter){
