@@ -350,16 +350,34 @@ function afterServerStart() {
 }
 
 function addRconListeners() {
-  rconServer.on("connection", function(){ show("Rcon connection received!") });
-  rconServer.on("message", function(message){ show("[Rcon] " + message) });
-  rconServer.on("command", function(command){
-    if(command == "/restart"){ stop("Rcon: Restarting...", 2); }
-    if(command == "/restart 10"){ stop("Rcon: Restarting...", 3); }
-    if(command == "/shutdown"){ stop("Rcon: Shutting down...", 0); }
-    if(command == "/reload"){ show("Rcon: Reloading all configs..."); readConfig(); }
-	if(command == "/status"){
-	  rconServer.broadcastMessage("Server status: Good");
-	  rconServer.broadcastMessage("Server has been running for: " + runningFor + " seconds");
+  rconServer.event.on("connection", function(socket){ show("[Rcon] Connection received from: " + socket.remoteAddress) });
+  rconServer.event.on("message", function(message){ show("[Rcon] " + message) });
+  rconServer.event.on("end", function(address){ show("[Rcon] Closing connection: " + address) });
+  rconServer.event.on("timeout", function(socket){ show("[Rcon] Connection: " + socket.remoteAddress + ", timed out") });
+  rconServer.event.on("command", function(command, socket){
+    switch(command) {
+      case "/restart":
+	    stop("Rcon: Restarting...", 2);
+		break;
+      case "/restart 10":
+	    stop("Rcon: Restarting...", 3);
+		break;
+      case "/shutdown":
+	    stop("Rcon: Shutting down...", 0);
+		break;
+      case "/reload":
+	    show("Rcon: Reloading all configs..."); readConfig();
+		break;
+	  case "/disconnect":
+	    rconServer.disconnect(socket, "Disconnected.");
+		break;
+	  case "/status":
+	    rconServer.sendMessage(socket, "Server status: Good");
+	    rconServer.sendMessage(socket, "Server has been running for: " + runningFor + " seconds");
+		break;
+	  default:
+	    rconServer.sendMessage(socket, "Command not recognised: " + command);
+		break;
 	}
   });
 }

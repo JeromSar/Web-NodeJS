@@ -19,7 +19,7 @@ var net = require('net');
 var event = require('events')
 
 var telnetServer;
-var started = false;
+var running = false;
 var eventEmitter = event.EventEmitter;
 
 var username;
@@ -29,59 +29,65 @@ var port;
 // connections
 var sockets = [];
 
-module.exports = new eventEmitter();
+// EXPORTS
+
+module.exports.event = new eventEmitter();
 
 module.exports.start = function(username, password, port){
-  if(!started){
+  if(!running){
     this.username = username;
 	this.password = password;
 	this.port = port;
-    telnetServer = net.createServer(telnetRequest);
+    telnetServer = net.createServer(function(socket) {
+      socket.setEncoding('utf8');
+      sockets.push(socket);
+      module.exports.event.emit("connection", socket);
+      socket.write("RCon session running!\r\n");
+      socket.on('data', function(data) { socketData(data, socket); });
+      socket.on('end', function() { socketEnd(socket); });
+    });
 	telnetServer.listen(this.port);
-	started = true;
+	running = true;
 	return true;
   } else {
     return false;
   }
 }
 
-module.exports.broadcast = function(message){
-  for(var i = 0; i<sockets.length; i++) {
-    sockets[i].write(message + "\r\n");
-	sockets[i].write("> ");
-  }
-}
-
-module.exports.sendMessage = function(socket, message){
+module.exports.sendMessage = function(socket, message) {
   socket.write(message + "\r\n");
 }
 
-module.exports.disconnectAll = function(disconnectMessage){
+module.exports.broadcast = function(message) {
   for(var i = 0; i<sockets.length; i++) {
+    sockets[i].write(message + "\r\n");
+  }
+}
+
+module.exports.disconnect = function(socket, disconnectMessage) {
+  module.exports.event.emit("end", socket.remoteAddress);
+  socket.end(disconnectMessage);
+}
+
+module.exports.disconnectAll = function(disconnectMessage) {
+  for(var i = 0; i<sockets.length; i++) {
+    module.exports.event.emit("end", sockets[i].remoteAddress);
     sockets[i].end(disconnectMessage);
   }
 }
 
-function telnetRequest(socket) {
-  socket.setEncoding('utf8');
-  module.exports.emit("connection", socket);
-  sockets.push(socket);
-  socket.write("RCon session started!\r\n");
-  socket.write("> ");
-  socket.on('data', function(data) { receiveData(data); });
-  socket.on('end', function() { closeSocket(socket); });
-}
-  
-function closeSocket(socket) {
+// FUNCTIONS
+
+function socketEnd(socket) {
   var i = sockets.indexOf(socket);
   if (i != -1) { sockets.splice(i, 1); }
 }
   
-function receiveData(data) {
+function socketData(data, socket) {
   data = data.toString().replace(/(\r\n|\n|\r)/gm, "");
   if(data.indexOf("/") === 0){
-    module.exports.emit("command", data); return;
+    module.exports.event.emit("command", data, socket); return;
   } else {
-    if(data != "" && data != " ") {  module.exports.emit("message", data); return; }
+    if(data != "" && data != " ") {  module.exports.event.emit("message", data); return; }
   }
 }
