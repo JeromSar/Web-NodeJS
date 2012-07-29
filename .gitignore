@@ -1,0 +1,6 @@
+# git ignoring file
+
+/web
+/config.ini
+/server.log
+/dissalow.ini
