@@ -30,19 +30,18 @@ var port;
 var sockets = [];
 
 // EXPORTS
-
 module.exports.event = new eventEmitter();
 
 module.exports.start = function(username, password, port){
   if(!running){
-    this.username = username;
-	this.password = password;
-	this.port = port;
+    this.username = username | "admin";
+	this.password = password | "superuser";
+	this.port = port | 23;
     telnetServer = net.createServer(function(socket) {
       socket.setEncoding('utf8');
       sockets.push(socket);
       module.exports.event.emit("connection", socket);
-      socket.write("RCon session running!\r\n");
+      socket.write("RCon session started!\r\n");
       socket.on('data', function(data) { socketData(data, socket); });
       socket.on('end', function() { socketEnd(socket); });
     });
@@ -54,40 +53,48 @@ module.exports.start = function(username, password, port){
   }
 }
 
-module.exports.sendMessage = function(socket, message) {
-  socket.write(message + "\r\n");
+module.exports.sendMessage = sendMessage;
+module.exports.broadcast = broadcast;
+module.exports.disconnect = disconnect;
+module.exports.disconnectAll = disconnectAll;
+
+// FUNCTIONS
+function sendMessage(socket, message) {
+  socket.write("> " + message + "\r\n");
 }
 
-module.exports.broadcast = function(message) {
+function broadcast(message) {
   for(var i = 0; i<sockets.length; i++) {
-    sockets[i].write(message + "\r\n");
+    sockets[i].write("> " + message + "\r\n");
   }
 }
 
-module.exports.disconnect = function(socket, disconnectMessage) {
+function disconnect(socket, disconnectMessage) {
   module.exports.event.emit("end", socket.remoteAddress);
   socket.end(disconnectMessage);
 }
 
-module.exports.disconnectAll = function(disconnectMessage) {
+function disconnectAll(message) {
   for(var i = 0; i<sockets.length; i++) {
     module.exports.event.emit("end", sockets[i].remoteAddress);
-    sockets[i].end(disconnectMessage);
+    sockets[i].end(message);
   }
 }
 
-// FUNCTIONS
 
-function socketEnd(socket) {
-  var i = sockets.indexOf(socket);
-  if (i != -1) { sockets.splice(i, 1); }
-}
-  
+// SOCKET HANDLERS
 function socketData(data, socket) {
   data = data.toString().replace(/(\r\n|\n|\r)/gm, "");
   if(data.indexOf("/") === 0){
     module.exports.event.emit("command", data, socket); return;
   } else {
-    if(data != "" && data != " ") {  module.exports.event.emit("message", data); return; }
+    data = data.replace(" ", "");
+    if(data != "") { sendMessage(socket, "Commands should be prefixed with a '/'"); return; }
   }
 }
+
+function socketEnd(socket) {
+  var i = sockets.indexOf(socket);
+  if (i != -1) { sockets.splice(i, 1); }
+}
+

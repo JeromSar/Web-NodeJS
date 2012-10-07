@@ -52,7 +52,7 @@ var rconPass = "superuser"
 // setting stdin values; this is for the key interface;
 process.stdin.resume();
 process.stdin.setEncoding('utf8');
-process.stdin.setRawMode(true);
+// process.stdin.setRawMode(true);
 
 // the log variable; to be defined later
 var logger = null;
@@ -70,12 +70,14 @@ function startUp(){
   show("Licened under the GNU GPL v3 licence");
   show("Starting up...");
   
+  
   // old code: starting the parts every 500 milliseconds
   /*
   setTimeout(function(){readConfig()},500);
   setTimeout(function(){readDisallow()},1000);
   setTimeout(function(){serverStart()},1500);
   */
+  
   // start an interval displaying how long the server has been running for
   setInterval(function(){ 
     runningFor += 1;
@@ -140,8 +142,10 @@ function readConfig(){
           if(debug) show("Remote Console password set to: " + rconpass);
         }
       }
-	  
     }
+	
+	show("Loading config");
+	
 	// check if the web directory exists
     if (!dirExists(webpath)) {
 	  show("Web directory not found", "WARNING");
